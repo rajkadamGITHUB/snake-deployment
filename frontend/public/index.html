@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake-Classic-Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css"> 
+</head>
+<body>
+
+    <!-- STARTUP MODAL -->
+    <div class="modal-overlay" id="startupModal" style="display: flex;">
+        <div class="modal-box startup-box">
+            <h2 style="color: #1a56db; font-family: 'Poppins', sans-serif;">Welcome to Snake-Classic-Game🐍</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">Please identify yourself to enter the arena.</p>
+            <input type="text" id="startupNameInput" class="edit-input" placeholder="Enter Your Name..." autocomplete="off">
+            <button class="primary-btn" style="width: 100%; margin-top: 15px; font-size: 1.1rem;" onclick="initializeUser()">Enter Game</button>
+        </div>
+    </div>
+
+    <div class="brand-watermark">⚙️-🛠️-☁️ -- RAJ_03_</div>
+
+    <!-- PROFILE MODAL -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-box">
+            <h2>Player Profile</h2>
+            <input type="hidden" id="profId">
+            
+            <div id="editableProfileSection">
+                <input type="text" id="profUsername" class="edit-input" placeholder="Username">
+            </div>
+            
+            <h3 id="readonlyUsername" style="color: #1a56db; margin-top: 0; display: none;"></h3>
+
+            <div class="profile-stats-grid">
+                <div class="stat-card"><span>High Score</span><br><b id="profScore">0</b></div>
+                <div class="stat-card"><span>Total Games</span><br><b id="profGames">0</b></div>
+                <div class="stat-card" style="border-color: #fca5a5; background: #fef2f2;"><span>Zero Scores</span><br><b id="profZero" style="color:#dc2626;">0</b></div>
+            </div>
+            
+            <div class="profile-stat" style="margin-top: 15px; font-size: 0.9rem;">Last Played: <span id="profDate">-</span></div>
+            
+            <div class="modal-actions">
+                <button class="primary-btn" id="updateUserBtn">Save Name</button>
+                <button class="secondary-btn" onclick="closeProfileModal()">Close</button>
+            </div>
+            <div style="margin-top: 15px;" id="profDeleteWrapper"></div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <h2 style="color: #dc2626; border-color: #fca5a5;">Confirm Deletion</h2>
+            <p>Are you sure you want to permanently delete this profile?</p>
+            <div class="modal-actions">
+                <button class="secondary-btn" onclick="closeDeleteModal()">Cancel</button>
+                <button class="primary-btn" style="background:#dc2626;" id="confirmDeleteBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="main-container" id="mainApp" style="display: none; opacity: 0;">
+        <!-- GAME AREA -->
+        <div class="game-section">
+            
+            <!-- HEADER: Score, Audio, and Pause nicely aligned -->
+            <!-- HEADER: Score, Theme, Audio, and Pause nicely aligned -->
+            <div class="canvas-header">
+                <div class="top-score">SCORE: <span id="scoreDisplay">0</span></div>
+                
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <!-- Theme & Audio Controls -->
+                    <button id="themeBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; margin-right: 5px;" title="Toggle Night Mode">🌙</button>
+                    <button id="muteBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0;" title="Mute / Unmute">🔊</button>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="100" style="width: 80px; cursor: pointer; margin-right: 15px;" title="Adjust Volume">
+                    
+                    <div class="pause-icon" id="pauseBtn" title="Pause / Resume">⏸️</div>
+                </div>
+            </div>
+            
+            <div class="canvas-wrapper">
+                <canvas id="gameCanvas" width="600" height="500"></canvas>
+                <div id="pauseOverlay"><h2>PAUSED</h2></div>
+                <div id="overlay">
+                    <h2 id="gameOverText" style="display: none;">Game Over</h2>
+                    <p id="finalScoreText" style="display: none; font-size: 1.2rem;">Final Score: <span id="finalScore" style="font-weight:bold; color: #1a56db;">0</span></p>
+                    <div class="btn-group">
+                        <button class="primary-btn" id="startBtn">Start Game</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="speed-indicator">Speed Level: <span id="speedDisplay">75x</span></div>
+            
+            <!-- MOBILE CONTROLS (Restored) -->
+            <div class="mobile-controls">
+                <div class="d-pad">
+                    <button class="dir-btn" id="btnUp">▲</button>
+                    <div class="d-pad-row">
+                        <button class="dir-btn" id="btnLeft">◀</button>
+                        <button class="dir-btn" id="btnDown">▼</button>
+                        <button class="dir-btn" id="btnRight">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="location.reload()">🔄 Refresh Session</button>
+        </div>
+
+        <!-- DASHBOARD AREA -->
+        <div class="dashboard-section">
+            <div class="collapsible-container">
+                <div class="collapsible-content">
+                    
+                    <div class="premium-highlight" id="topPlayerHighlight" style="display: none;">
+                        <h4>🏆 Reigning Champion 🏆</h4>
+                        <h2 id="topPlayerName">-</h2>
+                        <div>Score: <b id="topPlayerScore">0</b></div>
+                    </div>
+
+                    <h3 style="margin-top: 0; color: #1e293b; font-family: 'Poppins', sans-serif;">Global Leaderboard</h3>
+                    <div class="leaderboard-scroll">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Player Status</th>
+                                    <th style="text-align: center;">Score</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/game.js"></script>
+</body>
+</html>
