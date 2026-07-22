@@ -6,12 +6,50 @@ from sqlalchemy import create_engine, Column, Integer, String, desc
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from pydantic import BaseModel
 import datetime
-
+from urllib.parse import quote_plus
+import os
 # --- DATABASE SETUP ---
-DATABASE_URL = "mysql+pymysql://root:RajKadam03@localhost:3306/snake_db"
+DB_USER = os.getenv("DB_USER", "admin")
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DB_PASSWORD = quote_plus(
+    os.getenv("DB_PASSWORD", "RajKadam03")
+)
+
+DB_HOST = os.getenv(
+    "DB_HOST",
+    "flask-mysql-db.cpy6iqsu8118.ap-south-1.rds.amazonaws.com"
+)
+
+DB_PORT = os.getenv(
+    "DB_PORT",
+    "3306"
+)
+
+DB_NAME = os.getenv(
+    "DB_NAME",
+    "snake_db"
+)
+
+
+DATABASE_URL = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
+
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+
 Base = declarative_base()
 
 class PlayerData(Base):
@@ -45,11 +83,11 @@ app.add_middleware(
 )
 
 # 2. THEN, we mount the static directory
-app.mount("/static", StaticFiles(directory="../frontend/public"), name="static")
+app.mount("/static", StaticFiles(directory="frontend/public"), name="static")
 
 @app.get("/")
-async def serve_game():
-    return FileResponse("../frontend/public/index.html")
+def home():
+    return FileResponse("/app/frontend/public/index.html")
 
 
 # --- API ROUTES ---
@@ -64,7 +102,7 @@ class UserUpdate(BaseModel):
 def save_score(data: ScoreSubmit, db: Session = Depends(get_db)):
     player = db.query(PlayerData).filter(PlayerData.username == data.username).first()
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    
+
     if player:
         player.games_played += 1
         player.last_played = current_time
@@ -81,7 +119,7 @@ def save_score(data: ScoreSubmit, db: Session = Depends(get_db)):
             last_played=current_time
         )
         db.add(player)
-        
+
     db.commit()
     return {"status": "success"}
 
@@ -89,8 +127,8 @@ def save_score(data: ScoreSubmit, db: Session = Depends(get_db)):
 def get_leaderboard(db: Session = Depends(get_db)):
     scores = db.query(PlayerData).order_by(desc(PlayerData.high_score)).limit(15).all()
     return [{
-        "id": s.id, 
-        "username": s.username, 
+        "id": s.id,
+        "username": s.username,
         "high_score": s.high_score,
         "games_played": s.games_played,
         "zero_scores": s.zero_scores,
@@ -104,7 +142,7 @@ def update_username(player_id: int, data: UserUpdate, db: Session = Depends(get_
         exists = db.query(PlayerData).filter(PlayerData.username == data.new_username).first()
         if exists and exists.id != player_id:
             return {"status": "error", "message": "Username already taken"}
-            
+
         player.username = data.new_username
         db.commit()
         return {"status": "success"}

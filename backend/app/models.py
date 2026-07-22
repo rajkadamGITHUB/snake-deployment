@@ -5,15 +5,53 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, desc
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from pydantic import BaseModel
-
+from urllib.parse import quote_plus
+import os
 # ==========================================
 # 1. ADVANCED DATABASE CONFIGURATION
 # ==========================================
-# IMPORTANT: Ensure your password here is correct!
-DATABASE_URL = "mysql+pymysql://root:RajKadam03@localhost:3306/snake_db"
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DB_USER = os.getenv("DB_USER", "admin")
+
+DB_PASSWORD = quote_plus(
+    os.getenv("DB_PASSWORD", "RajKadam03")
+)
+
+DB_HOST = os.getenv(
+    "DB_HOST",
+    "flask-mysql-db.cpy6iqsu8118.ap-south-1.rds.amazonaws.com"
+)
+
+DB_PORT = os.getenv(
+    "DB_PORT",
+    "3306"
+)
+
+DB_NAME = os.getenv(
+    "DB_NAME",
+    "snake_db"
+)
+
+
+DATABASE_URL = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
+
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+
 Base = declarative_base()
 
 # UPGRADED MODEL: Tracks Player Profiles instead of just raw scores
@@ -65,7 +103,7 @@ class GameResult(BaseModel):
 def handle_game_over(data: GameResult, db: Session = Depends(get_db)):
     """Saves game results, updates high scores, and tracks total games played."""
     player = db.query(PlayerProfile).filter(PlayerProfile.username == data.username).first()
-    
+
     if player:
         # Update existing player
         player.games_played += 1
@@ -74,12 +112,12 @@ def handle_game_over(data: GameResult, db: Session = Depends(get_db)):
     else:
         # Create new player profile
         player = PlayerProfile(
-            username=data.username, 
-            high_score=data.score, 
+            username=data.username,
+            high_score=data.score,
             games_played=1
         )
         db.add(player)
-    
+
     db.commit()
     db.refresh(player)
     return {"status": "success", "player": {"username": player.username, "high_score": player.high_score, "games": player.games_played}}

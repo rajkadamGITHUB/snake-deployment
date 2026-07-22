@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   variables:
-    AWS_DEFAULT_REGION: us-west-2
-    IMAGE_REPO_NAME: flask-app
+    AWS_DEFAULT_REGION: ap-south-1
+    IMAGE_REPO_NAME: snake-app
     IMAGE_TAG: latest
 
 phases:
@@ -12,6 +12,7 @@ phases:
       - echo Logging in to Amazon ECR...
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Repository URI: $REPOSITORY_URI
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
@@ -25,3 +26,7 @@ phases:
       - echo Pushing Docker image...
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Build completed on `date`
+
+artifacts:
+  files:
+    - '**/*'
