@@ -6,6 +6,7 @@
     <title>Snake-Classic-Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css"> 
+    <link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -66,16 +67,20 @@
         <!-- GAME AREA -->
         <div class="game-section">
             
-            <!-- HEADER: Score, Audio, and Pause nicely aligned -->
-            <!-- HEADER: Score, Theme, Audio, and Pause nicely aligned -->
+            <!-- HEADER: Score, Audio, Theme, and Pause nicely aligned -->
             <div class="canvas-header">
                 <div class="top-score">SCORE: <span id="scoreDisplay">0</span></div>
                 
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <!-- Theme & Audio Controls -->
-                    <button id="themeBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; margin-right: 5px;" title="Toggle Night Mode">🌙</button>
-                    <button id="muteBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0;" title="Mute / Unmute">🔊</button>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="100" style="width: 80px; cursor: pointer; margin-right: 15px;" title="Adjust Volume">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    
+                    <!-- NEW: Theme Toggle Button -->
+                    <div class="pause-icon" id="themeBtn" title="Toggle Dark/Light Mode" style="font-size: 1.5rem;">🌙</div>
+
+                    <!-- Audio Controls -->
+                    <div class="audio-controls" style="display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <button id="muteBtn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0;" title="Mute / Unmute">🔊</button>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="100" style="width: 90px; cursor: pointer;" title="Adjust Volume">
+                    </div>
                     
                     <div class="pause-icon" id="pauseBtn" title="Pause / Resume">⏸️</div>
                 </div>
@@ -88,7 +93,7 @@
                     <h2 id="gameOverText" style="display: none;">Game Over</h2>
                     <p id="finalScoreText" style="display: none; font-size: 1.2rem;">Final Score: <span id="finalScore" style="font-weight:bold; color: #1a56db;">0</span></p>
                     <div class="btn-group">
-                        <button class="primary-btn" id="startBtn">Start Game</button>
+                        <button class="primary-btn" id="startBtn">Play Again</button>
                     </div>
                 </div>
             </div>
