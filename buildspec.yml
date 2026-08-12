@@ -1,32 +1,31 @@
 version: 0.2
 
-env:
-  variables:
-    AWS_DEFAULT_REGION: "ap-south-1"
-    IMAGE_REPO_NAME: "flask-cicd-ecr"
-    IMAGE_TAG: "latest"
-
 phases:
+
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - REPOSITORY_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-      - echo "Repository URI = ${REPOSITORY_URI}"
-      - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}
+      - echo Logging in to Amazon ECR...
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - AWS_REGION=$AWS_DEFAULT_REGION
+      - ECR_REPOSITORY=snake-game
+      - ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
 
   build:
     commands:
-      - echo "Build started"
-      - docker build -t ${IMAGE_REPO_NAME}:${IMAGE_TAG} .
-      - docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}
+      - echo Build started on `date`
+      - echo Building Docker image...
+      - docker build -t $ECR_REPOSITORY:latest .
+      - docker tag $ECR_REPOSITORY:latest $ECR_URI:latest
 
   post_build:
     commands:
-      - echo "Pushing Docker image..."
-      - docker push ${REPOSITORY_URI}:${IMAGE_TAG}
-      - echo "Build completed"
+      - echo Build completed on `date`
+      - echo Pushing Docker image to Amazon ECR...
+      - docker push $ECR_URI:latest
+      - echo Creating imagedefinitions.json...
+      - printf '[{"name":"snake-game","imageUri":"%s"}]' "$ECR_URI:latest" > imagedefinitions.json
 
 artifacts:
   files:
-    - '**/*'
+    - imagedefinitions.json
